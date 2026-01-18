@@ -18,10 +18,12 @@ public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
-    public AuthServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public AuthServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
     @Override
@@ -54,17 +56,23 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public JwtResponseDto loginUser(LoginRequestDto request) {
+        // 1. Find user by username, throw if not found
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid username or password"));
 
+        // 2. Check password matches
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new IllegalArgumentException("Invalid username or password");
         }
 
-        // placeholder token; replace with real JWT generation when available
-        String token = "dummy-token-" + user.getUsername();
+        // 3. Generate real JWT token using JwtService
+        // Pass user ID, username, and role name to create JWT claims
+        String token = jwtService.generateToken(user.getId(), user.getUsername(), user.getRole().name());
+
+        // 4. Prepare roles set for response
         Set<String> roles = Set.of(user.getRole().name());
 
+        // 5. Return JWT response with real token
         return new JwtResponseDto(token, user.getUsername(), roles);
     }
 }
