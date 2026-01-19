@@ -2,7 +2,6 @@ package lu.isd.isd_api.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -13,6 +12,7 @@ import lu.isd.isd_api.entity.Ticket;
 import lu.isd.isd_api.entity.TicketStatus;
 import lu.isd.isd_api.entity.TicketUrgency;
 import lu.isd.isd_api.entity.User;
+import lu.isd.isd_api.exception.ResourceNotFoundException; // <-- ADDED
 import lu.isd.isd_api.repository.TicketRepository;
 import lu.isd.isd_api.repository.UserRepository;
 
@@ -24,7 +24,6 @@ public class TicketServiceImpl implements TicketService {
     private final UserRepository userRepository;
     private final AuditLogService auditLogService;
 
-    // Constructor injection with all dependencies
     public TicketServiceImpl(
             TicketRepository ticketRepository,
             UserRepository userRepository,
@@ -62,14 +61,17 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
-    public Optional<Ticket> getTicketById(Long id) {
-        return ticketRepository.findById(id);
+    public Ticket getTicketById(Long id) {
+        return ticketRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Ticket", id));
     }
 
     @Override
     public Ticket updateTicket(Long id, Ticket updatedTicket) {
-        Ticket existingTicket = getTicketById(id)
-                .orElseThrow(() -> new RuntimeException("Ticket not found with id " + id));
+
+        // ✅ Proper exception instead of RuntimeException
+        Ticket existingTicket = ticketRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Ticket", id));
 
         if (updatedTicket.getTitle() != null) {
             existingTicket.setTitle(updatedTicket.getTitle());
@@ -83,6 +85,7 @@ public class TicketServiceImpl implements TicketService {
         if (updatedTicket.getUrgency() != null) {
             existingTicket.setUrgency(updatedTicket.getUrgency());
         }
+
         existingTicket.setUpdatedAt(LocalDateTime.now());
 
         Ticket savedTicket = ticketRepository.save(existingTicket);
@@ -98,8 +101,12 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     public void deleteTicket(Long id) {
-        // Optional: check if ticket exists before delete to throw exception or handle
-        // gracefully
+
+        // Ensure ticket exists before delete
+        if (!ticketRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Ticket", id);
+        }
+
         ticketRepository.deleteById(id);
 
         auditLogService.createAuditLog(new AuditLog(
@@ -111,17 +118,19 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     public List<Ticket> getTicketsByOwnerUsername(String username) {
+
+        // Throw ResourceNotFoundException if user not found by username
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("User not found with username " + username));
+                .orElseThrow(() -> new ResourceNotFoundException("User", username));
+
         return ticketRepository.findByOwner(user);
     }
 
-    // Helper method to get the current authenticated user's username safely
+    // Helper method
     private String getCurrentUsername() {
-        if (SecurityContextHolder.getContext().getAuthentication() != null
-                && SecurityContextHolder.getContext().getAuthentication().getName() != null) {
+        if (SecurityContextHolder.getContext().getAuthentication() != null) {
             return SecurityContextHolder.getContext().getAuthentication().getName();
         }
-        return "system"; // fallback for system processes or no auth context
+        return "system";
     }
 }

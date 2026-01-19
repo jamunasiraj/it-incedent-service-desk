@@ -9,7 +9,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/audit-logs")
@@ -29,9 +28,8 @@ public class AuditLogController {
     // Get audit log by ID
     @GetMapping("/{id}")
     public ResponseEntity<AuditLog> getAuditLogById(@PathVariable Long id) {
-        Optional<AuditLog> auditLog = auditLogService.getAuditLogById(id);
-        return auditLog.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        AuditLog auditLog = auditLogService.getAuditLogById(id);
+        return ResponseEntity.ok(auditLog);
     }
 
     // Get audit logs by admin username

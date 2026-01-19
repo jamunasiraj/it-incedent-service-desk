@@ -9,11 +9,12 @@
 		<relativePath/>
 		<!-- lookup parent from repository -->
 	</parent>
-	<groupId>lu.cnfpcfullstackd</groupId>
-	<artifactId>tfl-api</artifactId>
+	<groupId>lu.isd</groupId>
+	<artifactId>isd-api</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>tfl-api</name>
-	<description>Too Food To Leave</description>
+	<name>it-incident-service-desk-api</name>
+	<description>A role-based IT incident management system that allows users to report technical issues, enables support engineers and team leads to collaboratively resolve incidents, and provides administrative and managerial oversight through secure access controls</description>
+
 	<url/>
 	<licenses>
 		<license/>

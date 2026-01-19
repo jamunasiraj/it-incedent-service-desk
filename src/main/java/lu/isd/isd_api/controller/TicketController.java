@@ -13,6 +13,7 @@ import lu.isd.isd_api.dto.request.TicketCreateRequestDto;
 import lu.isd.isd_api.dto.response.TicketResponseDto;
 import lu.isd.isd_api.entity.Ticket;
 import lu.isd.isd_api.entity.User;
+
 import lu.isd.isd_api.mapper.TicketMapper;
 import lu.isd.isd_api.repository.UserRepository;
 import lu.isd.isd_api.service.TicketService;
@@ -57,12 +58,21 @@ public class TicketController {
     /**
      * GET TICKET BY ID
      */
+    // @GetMapping("/{id}")
+    // public ResponseEntity<TicketResponseDto> getTicketById(@PathVariable Long id)
+    // {
+    // try {
+    // Ticket ticket = ticketService.getTicketById(id);
+    // return ResponseEntity.ok(TicketMapper.toDto(ticket));
+    // } catch (ResourceNotFoundException e) {
+    // return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+    // }
+    // }
+
     @GetMapping("/{id}")
     public ResponseEntity<TicketResponseDto> getTicketById(@PathVariable Long id) {
-        return ticketService.getTicketById(id)
-                .map(TicketMapper::toDto)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        Ticket ticket = ticketService.getTicketById(id);
+        return ResponseEntity.ok(TicketMapper.toDto(ticket));
     }
 
     /**
