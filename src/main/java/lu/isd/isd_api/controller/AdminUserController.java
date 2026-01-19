@@ -5,6 +5,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
+
 import java.util.List;
 
 import lu.isd.isd_api.dto.OwnerDto;
@@ -27,7 +29,7 @@ public class AdminUserController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> updateUser(
             @PathVariable Long userId,
-            @RequestBody AdminUpdateUserRequest request) {
+            @Valid @RequestBody AdminUpdateUserRequest request) {
 
         userService.adminUpdateUser(userId, request);
         return ResponseEntity.noContent().build();

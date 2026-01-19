@@ -9,6 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
 import lu.isd.isd_api.dto.request.TicketCreateRequestDto;
 import lu.isd.isd_api.dto.response.TicketResponseDto;
 import lu.isd.isd_api.entity.Ticket;
@@ -37,7 +38,7 @@ public class TicketController {
      */
     @PostMapping
     public ResponseEntity<TicketResponseDto> createTicket(
-            @RequestBody TicketCreateRequestDto request,
+            @Valid @RequestBody TicketCreateRequestDto request,
             Principal principal) {
 
         User user = userRepository.findByUsername(principal.getName())
@@ -111,9 +112,8 @@ public class TicketController {
      * Updates basic fields only (title, description, urgency)
      */
     @PutMapping("/{id}")
-    public ResponseEntity<TicketResponseDto> updateTicket(
-            @PathVariable Long id,
-            @RequestBody TicketCreateRequestDto ticketDetails) {
+    public ResponseEntity<TicketResponseDto> updateTicket(@PathVariable Long id,
+            @Valid @RequestBody TicketCreateRequestDto ticketDetails) {
 
         try {
             Ticket toUpdate = new Ticket();

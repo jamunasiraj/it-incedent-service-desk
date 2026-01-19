@@ -3,10 +3,10 @@ package lu.isd.isd_api.dto.request;
 import jakarta.validation.constraints.NotBlank;
 
 public class LoginRequestDto {
-    @NotBlank
+    @NotBlank(message = "Username is mandatory")
     private String username;
 
-    @NotBlank
+    @NotBlank(message = "Password is mandatory")
     private String password;
 
     public String getUsername() {
