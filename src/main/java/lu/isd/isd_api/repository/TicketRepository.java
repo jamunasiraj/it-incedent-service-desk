@@ -11,4 +11,7 @@ import lu.isd.isd_api.entity.User;
 public interface TicketRepository extends JpaRepository<Ticket, Long> {
     // You can add custom query methods here if needed
     List<Ticket> findByOwner(User owner);
+
+    // Find tickets where a user is an assignee (participant)
+    List<Ticket> findByAssigneesContaining(User assignee);
 }
