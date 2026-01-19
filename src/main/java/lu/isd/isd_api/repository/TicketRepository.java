@@ -14,4 +14,5 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 
     // Find tickets where a user is an assignee (participant)
     List<Ticket> findByAssigneesContaining(User assignee);
+
 }
