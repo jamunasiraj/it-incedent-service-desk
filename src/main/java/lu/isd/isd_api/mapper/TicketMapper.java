@@ -1,6 +1,6 @@
 package lu.isd.isd_api.mapper;
 
-import lu.isd.isd_api.dto.OwnerDto;
+import lu.isd.isd_api.dto.OwnerPublicDto;
 import lu.isd.isd_api.dto.response.TicketResponseDto;
 import lu.isd.isd_api.entity.Ticket;
 import lu.isd.isd_api.entity.User;
@@ -20,24 +20,31 @@ public class TicketMapper {
             return null;
         }
 
-        OwnerDto ownerDto = null;
+        // Use public owner DTO (no id/password)
+        OwnerPublicDto ownerDto = null;
         User owner = ticket.getOwner();
 
         if (owner != null) {
-            ownerDto = new OwnerDto(
-                    owner.getId(),
+            ownerDto = new OwnerPublicDto(
                     owner.getUsername(),
                     owner.getRole());
         }
 
-        return new TicketResponseDto(
-                ticket.getId(),
+        java.util.List<lu.isd.isd_api.dto.OwnerPublicDto> assigneesList = null;
+        if (owner != null && ticket.getAssignees() != null) {
+            assigneesList = ticket.getAssignees().stream()
+                    .map(u -> new lu.isd.isd_api.dto.OwnerPublicDto(u.getUsername(), u.getRole()))
+                    .collect(java.util.stream.Collectors.toList());
+        }
+
+        TicketResponseDto dto = new TicketResponseDto(
                 ticket.getTitle(),
                 ticket.getDescription(),
                 ticket.getStatus(),
                 ticket.getUrgency(),
-                ticket.getCreatedAt(),
-                ticket.getUpdatedAt(),
                 ownerDto);
+
+        dto.setAssignees(assigneesList);
+        return dto;
     }
 }

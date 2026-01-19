@@ -5,6 +5,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
+import lu.isd.isd_api.dto.OwnerDto;
 import lu.isd.isd_api.dto.request.AdminUpdateUserRequest;
 import lu.isd.isd_api.service.UserService;
 
@@ -25,6 +28,19 @@ public class AdminUserController {
             @RequestBody AdminUpdateUserRequest request) {
 
         userService.adminUpdateUser(userId, request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<OwnerDto>> listUsers() {
+        return ResponseEntity.ok(userService.getAllUsers());
+    }
+
+    @DeleteMapping("/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long userId) {
+        userService.deleteUser(userId);
         return ResponseEntity.noContent().build();
     }
 }
