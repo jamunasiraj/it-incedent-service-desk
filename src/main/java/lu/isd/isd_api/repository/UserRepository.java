@@ -1,5 +1,6 @@
 package lu.isd.isd_api.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,5 +22,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // Check if email exists
     Boolean existsByEmail(String email);
+
+    // Find all non-deleted users
+    List<User> findAllByDeletedFalse();
 
 }

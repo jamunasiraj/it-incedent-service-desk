@@ -11,6 +11,11 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.FetchType;
+import java.util.Set;
+import java.util.HashSet;
 import jakarta.persistence.Table;
 
 @Entity
@@ -40,6 +45,10 @@ public class Ticket {
     @ManyToOne
     @JoinColumn(name = "owner_id")
     private User owner;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "ticket_assignees", joinColumns = @JoinColumn(name = "ticket_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
+    private Set<User> assignees = new HashSet<>();
 
     // Add constructors, getters, setters below
     public Ticket() {
@@ -110,6 +119,14 @@ public class Ticket {
 
     public void setOwner(User owner) {
         this.owner = owner;
+    }
+
+    public Set<User> getAssignees() {
+        return assignees;
+    }
+
+    public void setAssignees(Set<User> assignees) {
+        this.assignees = assignees;
     }
 
 }
