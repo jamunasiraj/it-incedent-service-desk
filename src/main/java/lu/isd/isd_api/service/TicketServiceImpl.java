@@ -2,15 +2,17 @@ package lu.isd.isd_api.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import lu.isd.isd_api.entity.AuditLog;
 import lu.isd.isd_api.entity.Ticket;
 import lu.isd.isd_api.entity.TicketStatus;
 import lu.isd.isd_api.entity.TicketUrgency;
 import lu.isd.isd_api.entity.User;
+import lu.isd.isd_api.exception.ResourceNotFoundException; // <-- ADDED
 import lu.isd.isd_api.repository.TicketRepository;
 import lu.isd.isd_api.repository.UserRepository;
 
@@ -20,10 +22,15 @@ public class TicketServiceImpl implements TicketService {
 
     private final TicketRepository ticketRepository;
     private final UserRepository userRepository;
+    private final AuditLogService auditLogService;
 
-    public TicketServiceImpl(TicketRepository ticketRepository, UserRepository userRepository) {
+    public TicketServiceImpl(
+            TicketRepository ticketRepository,
+            UserRepository userRepository,
+            AuditLogService auditLogService) {
         this.ticketRepository = ticketRepository;
         this.userRepository = userRepository;
+        this.auditLogService = auditLogService;
     }
 
     @Override
@@ -36,7 +43,16 @@ public class TicketServiceImpl implements TicketService {
         ticket.setCreatedAt(LocalDateTime.now());
         ticket.setStatus(ticket.getStatus() != null ? ticket.getStatus() : TicketStatus.OPEN);
         ticket.setUrgency(ticket.getUrgency() != null ? ticket.getUrgency() : TicketUrgency.MEDIUM);
-        return ticketRepository.save(ticket);
+
+        Ticket savedTicket = ticketRepository.save(ticket);
+
+        auditLogService.createAuditLog(new AuditLog(
+                getCurrentUsername(),
+                "CREATE_TICKET",
+                savedTicket.getId(),
+                "Ticket created"));
+
+        return savedTicket;
     }
 
     @Override
@@ -45,14 +61,17 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
-    public Optional<Ticket> getTicketById(Long id) {
-        return ticketRepository.findById(id);
+    public Ticket getTicketById(Long id) {
+        return ticketRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Ticket", id));
     }
 
     @Override
     public Ticket updateTicket(Long id, Ticket updatedTicket) {
-        Ticket existingTicket = getTicketById(id)
-                .orElseThrow(() -> new RuntimeException("Ticket not found with id " + id));
+
+        // ✅ Proper exception instead of RuntimeException
+        Ticket existingTicket = ticketRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Ticket", id));
 
         if (updatedTicket.getTitle() != null) {
             existingTicket.setTitle(updatedTicket.getTitle());
@@ -66,20 +85,52 @@ public class TicketServiceImpl implements TicketService {
         if (updatedTicket.getUrgency() != null) {
             existingTicket.setUrgency(updatedTicket.getUrgency());
         }
+
         existingTicket.setUpdatedAt(LocalDateTime.now());
 
-        return ticketRepository.save(existingTicket);
+        Ticket savedTicket = ticketRepository.save(existingTicket);
+
+        auditLogService.createAuditLog(new AuditLog(
+                getCurrentUsername(),
+                "UPDATE_TICKET",
+                savedTicket.getId(),
+                "Ticket updated"));
+
+        return savedTicket;
     }
 
     @Override
     public void deleteTicket(Long id) {
+
+        // Ensure ticket exists before delete
+        if (!ticketRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Ticket", id);
+        }
+
         ticketRepository.deleteById(id);
+
+        auditLogService.createAuditLog(new AuditLog(
+                getCurrentUsername(),
+                "DELETE_TICKET",
+                id,
+                "Ticket deleted"));
     }
 
     @Override
     public List<Ticket> getTicketsByOwnerUsername(String username) {
+
+        // Throw ResourceNotFoundException if user not found by username
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("User not found with username " + username));
+                .orElseThrow(() -> new ResourceNotFoundException("User", username));
+
         return ticketRepository.findByOwner(user);
+    }
+
+    // Helper method
+    private String getCurrentUsername() {
+        if (SecurityContextHolder.getContext().getAuthentication() != null) {
+            return SecurityContextHolder.getContext().getAuthentication().getName();
+        }
+        return "system";
     }
 }

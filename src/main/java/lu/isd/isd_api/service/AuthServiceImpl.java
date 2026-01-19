@@ -11,6 +11,7 @@ import lu.isd.isd_api.dto.response.ApiResponseDto;
 import lu.isd.isd_api.dto.response.JwtResponseDto;
 import lu.isd.isd_api.entity.RoleName;
 import lu.isd.isd_api.entity.User;
+import lu.isd.isd_api.exception.InvalidCredentialsException;
 import lu.isd.isd_api.repository.UserRepository;
 
 @Service
@@ -54,6 +55,7 @@ public class AuthServiceImpl implements AuthService {
                     }
                 }
             }
+
         }
 
         User user = new User();
@@ -69,23 +71,26 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public JwtResponseDto loginUser(LoginRequestDto request) {
+
         // 1. Find user by username, throw if not found
         User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid username or password"));
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid username or password"));
 
         // 2. Check password matches
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new IllegalArgumentException("Invalid username or password");
+            throw new InvalidCredentialsException("Invalid username or password");
         }
 
-        // 3. Generate real JWT token using JwtService
-        // Pass user ID, username, and role name to create JWT claims
-        String token = jwtService.generateToken(user.getId(), user.getUsername(), user.getRole().name());
+        // 3. Generate JWT token
+        String token = jwtService.generateToken(
+                user.getId(),
+                user.getUsername(),
+                user.getRole().name());
 
-        // 4. Prepare roles set for response
+        // 4. Prepare roles set
         Set<String> roles = Set.of(user.getRole().name());
 
-        // 5. Return JWT response with real token
+        // 5. Return response
         return new JwtResponseDto(token, user.getUsername(), roles);
     }
 }

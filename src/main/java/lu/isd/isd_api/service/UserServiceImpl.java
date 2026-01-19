@@ -11,46 +11,40 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import lu.isd.isd_api.entity.AuditLog;
-import lu.isd.isd_api.repository.AuditLogRepository;
-
 import lu.isd.isd_api.dto.OwnerDto;
 import lu.isd.isd_api.dto.request.AdminUpdateUserRequest;
 import lu.isd.isd_api.entity.User;
+import lu.isd.isd_api.exception.ResourceNotFoundException;
 import lu.isd.isd_api.repository.UserRepository;
 
 @Service
 @Transactional
 public class UserServiceImpl implements UserService {
+
     @Autowired
     private UserRepository userRepository;
+
     @Autowired
     private PasswordEncoder passwordEncoder;
+
     @Autowired
-    private AuditLogRepository auditLogRepository;
+    private AuditLogService auditLogService;
 
-    public UserServiceImpl(UserRepository userRepository,
-            PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
+    @Override
+    public User getUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", userId));
     }
 
-    public UserServiceImpl() {
-        // default constructor for Spring (field injection)
-    }
-
-    // for tests
-    public UserServiceImpl(UserRepository userRepository,
-            PasswordEncoder passwordEncoder, AuditLogRepository auditLogRepository) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.auditLogRepository = auditLogRepository;
+    @Override
+    public User getUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User", username));
     }
 
     @Override
     public void adminUpdateUser(Long userId, AdminUpdateUserRequest request) {
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = getUserById(userId);
 
         if (request.getUsername() != null) {
             user.setUsername(request.getUsername());
@@ -70,15 +64,15 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(user);
 
-        // Audit admin update
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String admin = auth != null ? String.valueOf(auth.getName()) : "system";
+        String admin = (auth != null) ? auth.getName() : "system";
+
         String details = "updated fields:" +
                 (request.getUsername() != null ? " username=" + request.getUsername() : "") +
                 (request.getEmail() != null ? " email=" + request.getEmail() : "") +
                 (request.getRole() != null ? " role=" + request.getRole() : "");
-        AuditLog log = new AuditLog(admin, "ADMIN_UPDATE_USER", userId, details);
-        auditLogRepository.save(log);
+
+        auditLogService.createAuditLog(new AuditLog(admin, "ADMIN_UPDATE_USER", userId, details));
     }
 
     @Override
@@ -90,16 +84,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUser(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = getUserById(userId); // reuse getUserById method
 
         user.setDeleted(true);
         userRepository.save(user);
 
-        // Audit
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String admin = auth != null ? String.valueOf(auth.getName()) : "system";
-        AuditLog log = new AuditLog(admin, "DELETE_USER_SOFT", userId, "soft deleted user");
-        auditLogRepository.save(log);
+        String admin = (auth != null) ? auth.getName() : "system";
+
+        auditLogService.createAuditLog(new AuditLog(admin, "DELETE_USER_SOFT", userId, "soft deleted user"));
     }
 }

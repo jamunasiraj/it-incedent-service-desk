@@ -3,6 +3,7 @@ package lu.isd.isd_api.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
 import lu.isd.isd_api.dto.request.RegisterRequestDto;
 import lu.isd.isd_api.dto.request.LoginRequestDto;
 import lu.isd.isd_api.dto.response.ApiResponseDto;
@@ -20,13 +21,13 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponseDto> register(@RequestBody RegisterRequestDto request) {
+    public ResponseEntity<ApiResponseDto> register(@Valid @RequestBody RegisterRequestDto request) {
         ApiResponseDto response = authService.registerUser(request);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<JwtResponseDto> login(@RequestBody LoginRequestDto request) {
+    public ResponseEntity<JwtResponseDto> login(@Valid @RequestBody LoginRequestDto request) {
         JwtResponseDto jwtResponse = authService.loginUser(request);
         return ResponseEntity.ok(jwtResponse);
     }
