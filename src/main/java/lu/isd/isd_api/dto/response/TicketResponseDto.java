@@ -1,47 +1,31 @@
 package lu.isd.isd_api.dto.response;
 
-import java.time.LocalDateTime;
-
-import lu.isd.isd_api.dto.OwnerDto;
+import lu.isd.isd_api.dto.OwnerPublicDto;
 import lu.isd.isd_api.entity.TicketStatus;
 import lu.isd.isd_api.entity.TicketUrgency;
 
+// EDIT: Simplified response DTO exposing only recommended public fields (2026-01-19)
 public class TicketResponseDto {
 
-    private Long id;
     private String title;
     private String description;
     private TicketStatus status;
     private TicketUrgency urgency;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private OwnerDto owner;
+    private OwnerPublicDto owner;
+    private java.util.List<OwnerPublicDto> assignees;
 
-    // ✅ Constructor used by Mapper
     public TicketResponseDto(
-            Long id,
             String title,
             String description,
             TicketStatus status,
             TicketUrgency urgency,
-            LocalDateTime createdAt,
-            LocalDateTime updatedAt,
-            OwnerDto owner) {
-
-        this.id = id;
+            OwnerPublicDto owner) {
         this.title = title;
         this.description = description;
         this.status = status;
         this.urgency = urgency;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
         this.owner = owner;
-    }
-
-    // ✅ Getters only (recommended for response DTOs)
-
-    public Long getId() {
-        return id;
+        this.assignees = java.util.Collections.emptyList();
     }
 
     public String getTitle() {
@@ -60,15 +44,15 @@ public class TicketResponseDto {
         return urgency;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public OwnerDto getOwner() {
+    public OwnerPublicDto getOwner() {
         return owner;
+    }
+
+    public java.util.List<OwnerPublicDto> getAssignees() {
+        return assignees;
+    }
+
+    public void setAssignees(java.util.List<OwnerPublicDto> assignees) {
+        this.assignees = assignees == null ? java.util.Collections.emptyList() : assignees;
     }
 }

@@ -1,6 +1,7 @@
 package lu.isd.isd_api.entity;
 
 import jakarta.persistence.*;
+import jakarta.persistence.Column;
 
 @Entity
 @Table(name = "users")
@@ -21,6 +22,10 @@ public class User {
 
     public User() {
     }
+
+    // EDIT: soft-delete flag for users (2026-01-19)
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean deleted = false;
 
     public User(Long id, String username, String password, String email, RoleName role) {
         this.id = id;
@@ -68,6 +73,14 @@ public class User {
 
     public void setRole(RoleName role) {
         this.role = role;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
     }
 
     // @Override

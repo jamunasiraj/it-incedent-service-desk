@@ -36,11 +36,24 @@ public class AuthServiceImpl implements AuthService {
             return new ApiResponseDto(false, "Email is already in use!");
         }
 
+        // EDIT: Improve role parsing to accept variants like TEAM_LEAD, team-lead,
+        // "team lead"
         RoleName role = RoleName.USER;
-        try {
-            role = RoleName.valueOf(request.getRole().toUpperCase());
-        } catch (Exception e) {
-            // keep default
+        if (request.getRole() != null && !request.getRole().isBlank()) {
+            String raw = request.getRole();
+            try {
+                role = RoleName.valueOf(raw.toUpperCase());
+            } catch (Exception ex) {
+                // Try relaxed matching: strip non-alphanumeric and compare
+                String normalized = raw.toUpperCase().replaceAll("[^A-Z0-9]", "");
+                for (RoleName rn : RoleName.values()) {
+                    String rnNorm = rn.name().toUpperCase().replaceAll("[^A-Z0-9]", "");
+                    if (rnNorm.equals(normalized)) {
+                        role = rn;
+                        break;
+                    }
+                }
+            }
         }
 
         User user = new User();
