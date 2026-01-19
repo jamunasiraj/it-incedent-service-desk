@@ -4,7 +4,6 @@ import lu.isd.isd_api.dto.OwnerPublicDto;
 import lu.isd.isd_api.entity.TicketStatus;
 import lu.isd.isd_api.entity.TicketUrgency;
 
-// EDIT: Simplified response DTO exposing only recommended public fields (2026-01-19)
 public class TicketResponseDto {
 
     private String title;

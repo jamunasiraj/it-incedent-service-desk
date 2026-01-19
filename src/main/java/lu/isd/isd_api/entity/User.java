@@ -1,12 +1,11 @@
 package lu.isd.isd_api.entity;
 
 import jakarta.persistence.*;
-import jakarta.persistence.Column;
 
 @Entity
 @Table(name = "users")
-
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -20,12 +19,12 @@ public class User {
     @Enumerated(EnumType.STRING)
     private RoleName role;
 
+    // Soft-delete flag
+    @Column(nullable = false)
+    private boolean deleted = false;
+
     public User() {
     }
-
-    // EDIT: soft-delete flag for users (2026-01-19)
-    @Column(nullable = false, columnDefinition = "boolean default false")
-    private boolean deleted = false;
 
     public User(Long id, String username, String password, String email, RoleName role) {
         this.id = id;
@@ -83,29 +82,28 @@ public class User {
         this.deleted = deleted;
     }
 
-    // @Override
-    // public boolean equals(Object o) {
-    // if (this == o)
-    // return true;
-    // if (o == null || getClass() != o.getClass())
-    // return false;
-    // User user = (User) o;
-    // return id != null && id.equals(user.id);
-    // }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        User user = (User) o;
+        return id != null && id.equals(user.id);
+    }
 
-    // @Override
-    // public int hashCode() {
-    // return 31;
-    // }
+    @Override
+    public int hashCode() {
+        return 31;
+    }
 
-    // @Override
-    // public String toString() {
-    // return "User{" +
-    // "id=" + id +
-    // ", username='" + username + '\'' +
-    // ", email='" + email + '\'' +
-    // ", role=" + role +
-    // '}';
-    // }
-
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", email='" + email + '\'' +
+                ", role=" + role +
+                '}';
+    }
 }
