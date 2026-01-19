@@ -4,9 +4,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import lu.isd.isd_api.entity.AuditLog; // <-- ADDED
 import lu.isd.isd_api.entity.Ticket;
 import lu.isd.isd_api.entity.TicketStatus;
 import lu.isd.isd_api.entity.TicketUrgency;
@@ -20,10 +22,16 @@ public class TicketServiceImpl implements TicketService {
 
     private final TicketRepository ticketRepository;
     private final UserRepository userRepository;
+    private final AuditLogService auditLogService; // <-- ADDED
 
-    public TicketServiceImpl(TicketRepository ticketRepository, UserRepository userRepository) {
+    // UPDATED constructor to inject AuditLogService
+    public TicketServiceImpl(
+            TicketRepository ticketRepository,
+            UserRepository userRepository,
+            AuditLogService auditLogService) {
         this.ticketRepository = ticketRepository;
         this.userRepository = userRepository;
+        this.auditLogService = auditLogService;
     }
 
     @Override
@@ -36,7 +44,19 @@ public class TicketServiceImpl implements TicketService {
         ticket.setCreatedAt(LocalDateTime.now());
         ticket.setStatus(ticket.getStatus() != null ? ticket.getStatus() : TicketStatus.OPEN);
         ticket.setUrgency(ticket.getUrgency() != null ? ticket.getUrgency() : TicketUrgency.MEDIUM);
-        return ticketRepository.save(ticket);
+
+        Ticket savedTicket = ticketRepository.save(ticket);
+
+        // ===================== AUDIT LOG =====================
+        auditLogService.createAuditLog(
+                new AuditLog(
+                        getCurrentUsername(),
+                        "CREATE_TICKET",
+                        savedTicket.getId(),
+                        "Ticket created"));
+        // =====================================================
+
+        return savedTicket;
     }
 
     @Override
@@ -68,12 +88,32 @@ public class TicketServiceImpl implements TicketService {
         }
         existingTicket.setUpdatedAt(LocalDateTime.now());
 
-        return ticketRepository.save(existingTicket);
+        Ticket savedTicket = ticketRepository.save(existingTicket);
+
+        // ===================== AUDIT LOG =====================
+        auditLogService.createAuditLog(
+                new AuditLog(
+                        getCurrentUsername(),
+                        "UPDATE_TICKET",
+                        savedTicket.getId(),
+                        "Ticket updated"));
+        // =====================================================
+
+        return savedTicket;
     }
 
     @Override
     public void deleteTicket(Long id) {
         ticketRepository.deleteById(id);
+
+        // ===================== AUDIT LOG =====================
+        auditLogService.createAuditLog(
+                new AuditLog(
+                        getCurrentUsername(),
+                        "DELETE_TICKET",
+                        id,
+                        "Ticket deleted"));
+        // =====================================================
     }
 
     @Override
@@ -81,5 +121,12 @@ public class TicketServiceImpl implements TicketService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with username " + username));
         return ticketRepository.findByOwner(user);
+    }
+
+    // Helper method to get logged-in username
+    private String getCurrentUsername() {
+        return SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
     }
 }
