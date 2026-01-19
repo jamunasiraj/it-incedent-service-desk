@@ -11,11 +11,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import lu.isd.isd_api.entity.AuditLog;
-
 import lu.isd.isd_api.dto.OwnerDto;
 import lu.isd.isd_api.dto.request.AdminUpdateUserRequest;
 import lu.isd.isd_api.entity.User;
-import lu.isd.isd_api.repository.AuditLogRepository;
+import lu.isd.isd_api.exception.ResourceNotFoundException;
 import lu.isd.isd_api.repository.UserRepository;
 
 @Service
@@ -29,36 +28,23 @@ public class UserServiceImpl implements UserService {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private AuditLogService auditLogService; // <-- Inject AuditLogService here
+    private AuditLogService auditLogService;
 
-    // Update constructor accordingly for constructor injection if you use it
-    public UserServiceImpl(UserRepository userRepository,
-            PasswordEncoder passwordEncoder,
-            AuditLogService auditLogService) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.auditLogService = auditLogService;
+    @Override
+    public User getUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", userId));
     }
 
-    public UserServiceImpl() {
-        // default constructor for Spring (field injection)
-    }
-
-    // for tests (if needed)
-    public UserServiceImpl(UserRepository userRepository,
-            PasswordEncoder passwordEncoder,
-            AuditLogService auditLogService,
-            AuditLogRepository auditLogRepository) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.auditLogService = auditLogService;
+    @Override
+    public User getUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User", username));
     }
 
     @Override
     public void adminUpdateUser(Long userId, AdminUpdateUserRequest request) {
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = getUserById(userId);
 
         if (request.getUsername() != null) {
             user.setUsername(request.getUsername());
@@ -78,9 +64,8 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(user);
 
-        // ===================== AUDIT LOG =====================
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String admin = auth != null ? auth.getName() : "system";
+        String admin = (auth != null) ? auth.getName() : "system";
 
         String details = "updated fields:" +
                 (request.getUsername() != null ? " username=" + request.getUsername() : "") +
@@ -88,7 +73,6 @@ public class UserServiceImpl implements UserService {
                 (request.getRole() != null ? " role=" + request.getRole() : "");
 
         auditLogService.createAuditLog(new AuditLog(admin, "ADMIN_UPDATE_USER", userId, details));
-        // =====================================================
     }
 
     @Override
@@ -100,17 +84,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUser(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = getUserById(userId); // reuse getUserById method
 
         user.setDeleted(true);
         userRepository.save(user);
 
-        // ===================== AUDIT LOG =====================
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String admin = auth != null ? auth.getName() : "system";
+        String admin = (auth != null) ? auth.getName() : "system";
 
         auditLogService.createAuditLog(new AuditLog(admin, "DELETE_USER_SOFT", userId, "soft deleted user"));
-        // =====================================================
     }
 }

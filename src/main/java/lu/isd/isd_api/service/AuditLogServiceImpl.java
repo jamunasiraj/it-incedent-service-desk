@@ -1,11 +1,12 @@
 package lu.isd.isd_api.service;
 
 import lu.isd.isd_api.entity.AuditLog;
+import lu.isd.isd_api.exception.ResourceNotFoundException;
 import lu.isd.isd_api.repository.AuditLogRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class AuditLogServiceImpl implements AuditLogService {
@@ -19,18 +20,27 @@ public class AuditLogServiceImpl implements AuditLogService {
     }
 
     @Override
-    public Optional<AuditLog> getAuditLogById(Long id) {
-        return auditLogRepository.findById(id);
+    public AuditLog getAuditLogById(Long id) {
+        return auditLogRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("AuditLog", id));
     }
 
     @Override
     public List<AuditLog> getAuditLogsByAdminUsername(String adminUsername) {
-        return auditLogRepository.findByAdminUsername(adminUsername);
+        List<AuditLog> logs = auditLogRepository.findByAdminUsername(adminUsername);
+        if (logs.isEmpty()) {
+            throw new ResourceNotFoundException("AuditLogs for admin username", adminUsername);
+        }
+        return logs;
     }
 
     @Override
     public List<AuditLog> getAuditLogsByTargetUserId(Long targetUserId) {
-        return auditLogRepository.findByTargetUserId(targetUserId);
+        List<AuditLog> logs = auditLogRepository.findByTargetUserId(targetUserId);
+        if (logs.isEmpty()) {
+            throw new ResourceNotFoundException("AuditLogs for target user id", targetUserId);
+        }
+        return logs;
     }
 
     @Override
@@ -45,11 +55,14 @@ public class AuditLogServiceImpl implements AuditLogService {
                     auditLog.setDetails(auditLogDetails.getDetails());
                     return auditLogRepository.save(auditLog);
                 })
-                .orElseThrow(() -> new RuntimeException("AuditLog not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("AuditLog", id));
     }
 
     @Override
     public void deleteAuditLog(Long id) {
+        if (!auditLogRepository.existsById(id)) {
+            throw new ResourceNotFoundException("AuditLog", id);
+        }
         auditLogRepository.deleteById(id);
     }
 }
