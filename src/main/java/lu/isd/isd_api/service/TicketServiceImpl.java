@@ -8,7 +8,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import lu.isd.isd_api.entity.AuditLog; // <-- ADDED
+import lu.isd.isd_api.entity.AuditLog;
 import lu.isd.isd_api.entity.Ticket;
 import lu.isd.isd_api.entity.TicketStatus;
 import lu.isd.isd_api.entity.TicketUrgency;
@@ -22,9 +22,9 @@ public class TicketServiceImpl implements TicketService {
 
     private final TicketRepository ticketRepository;
     private final UserRepository userRepository;
-    private final AuditLogService auditLogService; // <-- ADDED
+    private final AuditLogService auditLogService;
 
-    // UPDATED constructor to inject AuditLogService
+    // Constructor injection with all dependencies
     public TicketServiceImpl(
             TicketRepository ticketRepository,
             UserRepository userRepository,
@@ -47,14 +47,11 @@ public class TicketServiceImpl implements TicketService {
 
         Ticket savedTicket = ticketRepository.save(ticket);
 
-        // ===================== AUDIT LOG =====================
-        auditLogService.createAuditLog(
-                new AuditLog(
-                        getCurrentUsername(),
-                        "CREATE_TICKET",
-                        savedTicket.getId(),
-                        "Ticket created"));
-        // =====================================================
+        auditLogService.createAuditLog(new AuditLog(
+                getCurrentUsername(),
+                "CREATE_TICKET",
+                savedTicket.getId(),
+                "Ticket created"));
 
         return savedTicket;
     }
@@ -90,30 +87,26 @@ public class TicketServiceImpl implements TicketService {
 
         Ticket savedTicket = ticketRepository.save(existingTicket);
 
-        // ===================== AUDIT LOG =====================
-        auditLogService.createAuditLog(
-                new AuditLog(
-                        getCurrentUsername(),
-                        "UPDATE_TICKET",
-                        savedTicket.getId(),
-                        "Ticket updated"));
-        // =====================================================
+        auditLogService.createAuditLog(new AuditLog(
+                getCurrentUsername(),
+                "UPDATE_TICKET",
+                savedTicket.getId(),
+                "Ticket updated"));
 
         return savedTicket;
     }
 
     @Override
     public void deleteTicket(Long id) {
+        // Optional: check if ticket exists before delete to throw exception or handle
+        // gracefully
         ticketRepository.deleteById(id);
 
-        // ===================== AUDIT LOG =====================
-        auditLogService.createAuditLog(
-                new AuditLog(
-                        getCurrentUsername(),
-                        "DELETE_TICKET",
-                        id,
-                        "Ticket deleted"));
-        // =====================================================
+        auditLogService.createAuditLog(new AuditLog(
+                getCurrentUsername(),
+                "DELETE_TICKET",
+                id,
+                "Ticket deleted"));
     }
 
     @Override
@@ -123,10 +116,12 @@ public class TicketServiceImpl implements TicketService {
         return ticketRepository.findByOwner(user);
     }
 
-    // Helper method to get logged-in username
+    // Helper method to get the current authenticated user's username safely
     private String getCurrentUsername() {
-        return SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getName();
+        if (SecurityContextHolder.getContext().getAuthentication() != null
+                && SecurityContextHolder.getContext().getAuthentication().getName() != null) {
+            return SecurityContextHolder.getContext().getAuthentication().getName();
+        }
+        return "system"; // fallback for system processes or no auth context
     }
 }

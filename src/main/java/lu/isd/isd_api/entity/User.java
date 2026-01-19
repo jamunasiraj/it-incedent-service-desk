@@ -1,5 +1,8 @@
 package lu.isd.isd_api.entity;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -22,6 +25,23 @@ public class User {
     // Soft-delete flag
     @Column(nullable = false)
     private boolean deleted = false;
+    // === START: Relationship mappings ===
+
+    /**
+     * One User can own many Tickets (One-to-Many relationship)
+     * "ownedTickets" holds tickets where this user is the owner
+     */
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<Ticket> ownedTickets = new HashSet<>();
+
+    /**
+     * Many Users can be assigned to many Tickets (Many-to-Many relationship)
+     * "assignedTickets" holds tickets where this user is assigned as participant
+     */
+    @ManyToMany(mappedBy = "assignees", fetch = FetchType.LAZY)
+    private Set<Ticket> assignedTickets = new HashSet<>();
+
+    // === END: Relationship mappings ===
 
     public User() {
     }
