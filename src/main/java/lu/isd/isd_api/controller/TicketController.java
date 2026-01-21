@@ -19,11 +19,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lu.isd.isd_api.dto.request.TicketCreateRequestDto;
+import lu.isd.isd_api.dto.request.TicketUpdateRequestDto;
 import lu.isd.isd_api.dto.response.TicketResponseDto;
 import lu.isd.isd_api.entity.Ticket;
+
 import lu.isd.isd_api.entity.User;
 import lu.isd.isd_api.exception.ResourceNotFoundException;
 import lu.isd.isd_api.mapper.TicketMapper;
+
 import lu.isd.isd_api.repository.UserRepository;
 import lu.isd.isd_api.service.TicketService;
 
@@ -37,6 +40,7 @@ public class TicketController {
     public TicketController(TicketService ticketService, UserRepository userRepository) {
         this.ticketService = ticketService;
         this.userRepository = userRepository;
+
     }
 
     @Operation(summary = "Get tickets assigned to a specific user", description = "Returns the list of tickets where the user is assigned as a participant")
@@ -97,8 +101,7 @@ public class TicketController {
         ticket.setTitle(request.getTitle());
         ticket.setDescription(request.getDescription());
         ticket.setUrgency(request.getUrgency());
-
-        // Owner assignment establishes One-to-Many relation
+        ticket.setStatus(request.getStatus()); // directly use enum from DTO
         ticket.setOwner(user);
 
         Ticket createdTicket = ticketService.createTicket(ticket);
@@ -148,11 +151,12 @@ public class TicketController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<TicketResponseDto> updateTicket(@PathVariable Long id,
-            @Valid @RequestBody TicketCreateRequestDto ticketDetails) {
+            @Valid @RequestBody TicketUpdateRequestDto ticketDetails) {
 
         try {
             Ticket toUpdate = new Ticket();
             toUpdate.setTitle(ticketDetails.getTitle());
+            toUpdate.setStatus(ticketDetails.getStatus());
             toUpdate.setDescription(ticketDetails.getDescription());
             toUpdate.setUrgency(ticketDetails.getUrgency());
 
@@ -177,28 +181,4 @@ public class TicketController {
         }
     }
 
-    // =========================================================
-    // OPTIONAL EXTENSIONS (DO NOT ENABLE NOW)
-    // =========================================================
-
-    /*
-     * FUTURE: Get tickets where logged-in user is an ASSIGNEE
-     * (Many-to-Many relationship)
-     *
-     * Endpoint idea:
-     * GET /api/tickets/assigned
-     *
-     * Uses:
-     * ticketRepository.findByAssigneesContaining(user)
-     */
-
-    /*
-     * FUTURE: Assign user to ticket
-     * POST /api/tickets/{id}/assign/{userId}
-     */
-
-    /*
-     * FUTURE: Remove user from ticket
-     * DELETE /api/tickets/{id}/assign/{userId}
-     */
 }

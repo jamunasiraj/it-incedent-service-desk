@@ -1,23 +1,24 @@
 package lu.isd.isd_api.dto.request;
 
-import jakarta.validation.constraints.*;
-import lu.isd.isd_api.entity.TicketStatus;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lu.isd.isd_api.entity.TicketUrgency;
+import lu.isd.isd_api.entity.TicketStatus;
 
-public class TicketCreateRequestDto {
+public class TicketUpdateRequestDto {
 
     @NotBlank(message = "Title is required")
-    @Size(max = 100, message = "Title can't exceed 100 characters")
     private String title;
 
-    @NotBlank(message = "Description is required")
     private String description;
+
+    @NotNull(message = "Status is required")
+    private TicketStatus status;
 
     @NotNull(message = "Urgency is required")
     private TicketUrgency urgency;
 
-    @NotNull(message = "Ticket status is required")
-    private TicketStatus status;
+    // Getters and setters
 
     public String getTitle() {
         return title;
@@ -35,19 +36,19 @@ public class TicketCreateRequestDto {
         this.description = description;
     }
 
-    public TicketUrgency getUrgency() {
-        return urgency;
-    }
-
-    public void setUrgency(TicketUrgency urgency) {
-        this.urgency = urgency;
-    }
-
     public TicketStatus getStatus() {
         return status;
     }
 
     public void setStatus(TicketStatus status) {
         this.status = status;
+    }
+
+    public TicketUrgency getUrgency() {
+        return urgency;
+    }
+
+    public void setUrgency(TicketUrgency urgency) {
+        this.urgency = urgency;
     }
 }
