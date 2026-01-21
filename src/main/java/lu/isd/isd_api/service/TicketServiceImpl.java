@@ -133,4 +133,36 @@ public class TicketServiceImpl implements TicketService {
         }
         return "system";
     }
+
+    @Override
+    public Ticket assignUserToTicket(Long ticketId, Long userId) {
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResourceNotFoundException("Ticket", ticketId));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", userId));
+
+        ticket.getAssignees().add(user);
+        user.getAssignedTickets().add(ticket);
+
+        // Save both sides (usually saving ticket is enough due to cascade)
+        return ticketRepository.save(ticket);
+    }
+
+    @Override
+    public List<Ticket> getTicketsByAssignee(User assignee) {
+        return ticketRepository.findByAssigneesContaining(assignee);
+    }
+
+    @Override
+    public Ticket removeUserFromTicket(Long ticketId, Long userId) {
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResourceNotFoundException("Ticket", ticketId));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", userId));
+
+        ticket.getAssignees().remove(user);
+        user.getAssignedTickets().remove(ticket);
+
+        return ticketRepository.save(ticket);
+    }
 }

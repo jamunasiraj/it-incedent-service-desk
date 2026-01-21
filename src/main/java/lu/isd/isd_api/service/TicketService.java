@@ -20,4 +20,10 @@ public interface TicketService {
 
     List<Ticket> getTicketsByOwner(User owner);
 
+    Ticket assignUserToTicket(Long ticketId, Long userId);
+
+    Ticket removeUserFromTicket(Long ticketId, Long userId);
+
+    List<Ticket> getTicketsByAssignee(User assignee);
+
 }

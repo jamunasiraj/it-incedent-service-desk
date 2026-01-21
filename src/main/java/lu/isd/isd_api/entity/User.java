@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "users")
@@ -13,10 +14,13 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true)
     private String username;
 
+    @Column(nullable = false)
     private String password;
 
+    @Column(nullable = false, unique = true)
     private String email;
 
     @Enumerated(EnumType.STRING)
@@ -25,13 +29,13 @@ public class User {
     // Soft-delete flag
     @Column(nullable = false)
     private boolean deleted = false;
-    // === START: Relationship mappings ===
 
     /**
      * One User can own many Tickets (One-to-Many relationship)
      * "ownedTickets" holds tickets where this user is the owner
      */
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     private Set<Ticket> ownedTickets = new HashSet<>();
 
     /**
@@ -39,9 +43,8 @@ public class User {
      * "assignedTickets" holds tickets where this user is assigned as participant
      */
     @ManyToMany(mappedBy = "assignees", fetch = FetchType.LAZY)
+    @JsonIgnore
     private Set<Ticket> assignedTickets = new HashSet<>();
-
-    // === END: Relationship mappings ===
 
     public User() {
     }
@@ -52,6 +55,16 @@ public class User {
         this.password = password;
         this.email = email;
         this.role = role;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        User user = (User) o;
+        return id != null && id.equals(user.id);
     }
 
     public Long getId() {
@@ -102,14 +115,20 @@ public class User {
         this.deleted = deleted;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
-        User user = (User) o;
-        return id != null && id.equals(user.id);
+    public Set<Ticket> getOwnedTickets() {
+        return ownedTickets;
+    }
+
+    public void setOwnedTickets(Set<Ticket> ownedTickets) {
+        this.ownedTickets = ownedTickets;
+    }
+
+    public Set<Ticket> getAssignedTickets() {
+        return assignedTickets;
+    }
+
+    public void setAssignedTickets(Set<Ticket> assignedTickets) {
+        this.assignedTickets = assignedTickets;
     }
 
     @Override
@@ -125,5 +144,20 @@ public class User {
                 ", email='" + email + '\'' +
                 ", role=" + role +
                 '}';
+    }
+
+    // helper
+    public void addOwnedTicket(Ticket ticket) {
+        if (ticket != null) {
+            ownedTickets.add(ticket);
+            ticket.setOwner(this);
+        }
+    }
+
+    public void addAssignedTicket(Ticket ticket) {
+        if (ticket != null) {
+            assignedTickets.add(ticket);
+            ticket.getAssignees().add(this);
+        }
     }
 }
