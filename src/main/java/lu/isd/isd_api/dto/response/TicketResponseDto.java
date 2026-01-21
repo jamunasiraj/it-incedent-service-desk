@@ -6,6 +6,8 @@ import lu.isd.isd_api.entity.TicketUrgency;
 
 public class TicketResponseDto {
 
+    private Long id;
+
     private String title;
     private String description;
     private TicketStatus status;
@@ -25,6 +27,14 @@ public class TicketResponseDto {
         this.urgency = urgency;
         this.owner = owner;
         this.assignees = java.util.Collections.emptyList();
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getTitle() {
