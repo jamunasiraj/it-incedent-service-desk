@@ -59,7 +59,7 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // ✅ Spring Security CORS (correct way)
+    // Spring Security CORS
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();

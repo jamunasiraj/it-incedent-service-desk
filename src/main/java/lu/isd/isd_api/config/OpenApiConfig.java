@@ -14,15 +14,6 @@ public class OpenApiConfig {
         @Bean
         public OpenAPI openAPI() {
                 final String securitySchemeName = "bearerAuth";
-                // return new OpenAPI()
-                // .components(new Components()
-                // .addSecuritySchemes("bearerAuth",
-                // new SecurityScheme()
-                // .type(SecurityScheme.Type.HTTP)
-                // .scheme("bearer")
-                // .bearerFormat("JWT")))
-                // .addSecurityItem(new SecurityRequirement().addList("bearerAuth"));
-
                 return new OpenAPI()
                                 .info(new Info()
                                                 .title("ISD (IT Incident Service Desk) API")
