@@ -2,7 +2,6 @@ package lu.isd.isd_api.dto;
 
 import lu.isd.isd_api.entity.RoleName;
 
-// EDIT: Public owner DTO for ticket responses (no ids / sensitive fields) (2026-01-19)
 public class OwnerPublicDto {
 
     private final String username;
