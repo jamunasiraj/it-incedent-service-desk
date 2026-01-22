@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.security.Principal;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -130,13 +131,19 @@ public class TicketController {
         List<Ticket> tickets;
 
         if (isAdmin) {
-            // Admin access: view all tickets
+            // Admin sees all tickets
             tickets = ticketService.getAllTickets();
         } else {
-            // User access: view only owned tickets
             User user = userRepository.findByUsername(principal.getName())
                     .orElseThrow(() -> new RuntimeException("User not found"));
-            tickets = ticketService.getTicketsByOwner(user);
+
+            // User sees tickets they own or assigned to them
+            List<Ticket> ownedTickets = ticketService.getTicketsByOwner(user);
+            List<Ticket> assignedTickets = ticketService.getTicketsByAssignee(user);
+
+            tickets = Stream.concat(ownedTickets.stream(), assignedTickets.stream())
+                    .distinct()
+                    .collect(Collectors.toList());
         }
 
         return ResponseEntity.ok(
