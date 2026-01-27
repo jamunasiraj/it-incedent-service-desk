@@ -17,6 +17,16 @@ public class TicketUpdateRequestDto {
 
     @NotNull(message = "Urgency is required")
     private TicketUrgency urgency;
+    // remark
+    private String remark;
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
+    }
 
     // Getters and setters
 

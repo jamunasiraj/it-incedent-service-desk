@@ -18,6 +18,8 @@ public class TicketCreateRequestDto {
 
     @NotNull(message = "Ticket status is required")
     private TicketStatus status;
+    // ADDED: remark field
+    private String remark;
 
     public String getTitle() {
         return title;
@@ -49,5 +51,13 @@ public class TicketCreateRequestDto {
 
     public void setStatus(TicketStatus status) {
         this.status = status;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
     }
 }

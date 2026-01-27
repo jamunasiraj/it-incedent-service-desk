@@ -104,6 +104,7 @@ public class TicketController {
         ticket.setUrgency(request.getUrgency());
         ticket.setStatus(request.getStatus()); // directly use enum from DTO
         ticket.setOwner(user);
+        ticket.setRemark(request.getRemark());
 
         Ticket createdTicket = ticketService.createTicket(ticket);
         return ResponseEntity.ok(TicketMapper.toDto(createdTicket));
@@ -156,19 +157,56 @@ public class TicketController {
      * UPDATE TICKET
      * Updates basic fields only (title, description, urgency)
      */
+    // @PutMapping("/{id}")
+    // public ResponseEntity<TicketResponseDto> updateTicket(@PathVariable Long id,
+    // @Valid @RequestBody TicketUpdateRequestDto ticketDetails) {
+
+    // try {
+    // Ticket toUpdate = new Ticket();
+    // toUpdate.setTitle(ticketDetails.getTitle());
+    // toUpdate.setStatus(ticketDetails.getStatus());
+    // toUpdate.setDescription(ticketDetails.getDescription());
+    // toUpdate.setUrgency(ticketDetails.getUrgency());
+    // toUpdate.setRemark(ticketDetails.getRemark());
+
+    // Ticket updatedTicket = ticketService.updateTicket(id, toUpdate);
+    // return ResponseEntity.ok(TicketMapper.toDto(updatedTicket));
+    // } catch (RuntimeException e) {
+    // return ResponseEntity.notFound().build();
+    // }
+    // }
+
     @PutMapping("/{id}")
-    public ResponseEntity<TicketResponseDto> updateTicket(@PathVariable Long id,
+    public ResponseEntity<TicketResponseDto> updateTicket(
+            @PathVariable Long id,
             @Valid @RequestBody TicketUpdateRequestDto ticketDetails) {
 
         try {
+            // 🔐 Get current authentication
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+            // 🔐 Check if user can edit remark
+            boolean canEditRemark = auth != null && auth.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")
+                            || a.getAuthority().equals("ROLE_SUPPORT_ENGINEER"));
+
             Ticket toUpdate = new Ticket();
+
+            // ✅ Always-allowed updates
             toUpdate.setTitle(ticketDetails.getTitle());
             toUpdate.setStatus(ticketDetails.getStatus());
             toUpdate.setDescription(ticketDetails.getDescription());
             toUpdate.setUrgency(ticketDetails.getUrgency());
 
+            // 🔒 RESTRICTED: remark update
+            // Only ADMIN / SUPPORT_ENGINEER can update remark
+            if (canEditRemark) {
+                toUpdate.setRemark(ticketDetails.getRemark());
+            }
+
             Ticket updatedTicket = ticketService.updateTicket(id, toUpdate);
             return ResponseEntity.ok(TicketMapper.toDto(updatedTicket));
+
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }

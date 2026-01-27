@@ -50,9 +50,10 @@ public class TicketMapper {
                 ticket.getDescription(),
                 ticket.getStatus(),
                 ticket.getUrgency(),
+                ticket.getRemark(),
                 ownerDto);
 
-        //  set ID
+        // set ID
         dto.setId(ticket.getId());
 
         dto.setAssignees(assigneesList);
