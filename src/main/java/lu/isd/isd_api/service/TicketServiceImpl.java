@@ -87,6 +87,7 @@ public class TicketServiceImpl implements TicketService {
         }
 
         existingTicket.setUpdatedAt(LocalDateTime.now());
+        existingTicket.setRemark(updatedTicket.getRemark());
 
         Ticket savedTicket = ticketRepository.save(existingTicket);
 

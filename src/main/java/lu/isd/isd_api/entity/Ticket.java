@@ -40,6 +40,18 @@ public class Ticket {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+    // remark
+    // ADDED: Internal remark visible only to ADMIN / SUPPORT_ENGINEER
+    @Column(length = 1000)
+    private String remark;
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
+    }
 
     // For simplicity, assume one user owns the ticket
     @ManyToOne

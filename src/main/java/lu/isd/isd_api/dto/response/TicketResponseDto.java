@@ -14,19 +14,32 @@ public class TicketResponseDto {
     private TicketUrgency urgency;
     private OwnerPublicDto owner;
     private java.util.List<OwnerPublicDto> assignees;
+    // ADDED: remark field
+    private String remark;
 
     public TicketResponseDto(
             String title,
             String description,
             TicketStatus status,
             TicketUrgency urgency,
+            String remark,
             OwnerPublicDto owner) {
         this.title = title;
         this.description = description;
         this.status = status;
         this.urgency = urgency;
+        this.remark = remark;
         this.owner = owner;
         this.assignees = java.util.Collections.emptyList();
+
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
     }
 
     public Long getId() {
